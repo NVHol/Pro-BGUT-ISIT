@@ -32,7 +32,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            /* Разрешаем прокрутку на мобильных устройствах, если элемент выше экрана */
             overflow-y: auto;
             overflow-x: hidden;
         }
@@ -40,7 +39,7 @@
         #game-container {
             width: 100vw;
             height: 100vh;
-            min-height: 700px; /* Гарантирует минимальную высоту для размещения всех элементов */
+            min-height: 700px;
             position: relative;
             background-size: cover;
             background-position: center;
@@ -102,6 +101,43 @@
             color: #b2ebf2;
             min-height: 80px;
             text-align: justify;
+        }
+
+        /* Индикатор прокрутки для мобильных */
+        .scroll-indicator {
+            text-align: center;
+            color: #00e5ff;
+            font-size: 0.8rem;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            display: none;
+            animation: bounceScroll 1.5s infinite;
+        }
+
+        @keyframes bounceScroll {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(4px); }
+        }
+
+        /* Адаптация шрифтов и отступов только для телефонов в горизонтальном режиме */
+        @media (max-height: 500px) {
+            .dialogue-box {
+                padding: 15px 20px;
+                margin-bottom: 10px;
+            }
+            .dialogue-text {
+                font-size: 0.9rem;
+                line-height: 1.4;
+                min-height: 50px;
+                margin-bottom: 10px;
+            }
+            .scroll-indicator {
+                display: block; /* Показываем подсказку прокрутки на телефонах */
+            }
+            .btn {
+                padding: 8px 20px;
+                font-size: 0.9rem;
+            }
         }
 
         .btn {
@@ -487,6 +523,7 @@
         <!-- Диалоговое окно сюжета -->
         <div class="dialogue-box" id="dialogue-box" onclick="handleDialogueClick()" style="display: none;">
             <div class="dialogue-text" id="dialogue-text"></div>
+            <div class="scroll-indicator">⬇️ Прокрутите ниже для продолжения ⬇️</div>
             <button class="btn" id="next-btn" onclick="event.stopPropagation(); nextStage();" style="display: none;">ПРОДОЛЖИТЬ</button>
         </div>
 
