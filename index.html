@@ -49,6 +49,15 @@
             padding: 30px;
         }
 
+        /* Автоматическая адаптация под горизонтальные экраны телефонов (маленькая высота) */
+        @media (max-height: 500px) {
+            #game-container {
+                height: 100vh;
+                transform: scale(0.82);
+                transform-origin: center center;
+            }
+        }
+
         /* Предупреждение о портретной ориентации на мобильных */
         #orientation-warning {
             position: fixed;
@@ -490,7 +499,6 @@
         // Проверка ориентации экрана для мобильных устройств
         function checkOrientation() {
             const warning = document.getElementById('orientation-warning');
-            // Если устройство мобильное/узкое и высота больше ширины (портретный режим)
             if (window.innerWidth < 900 && window.innerHeight > window.innerWidth) {
                 warning.style.display = 'flex';
             } else {
