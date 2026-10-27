@@ -2,7 +2,9 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>Pro-БГУТ: Студент на час — Нексус-9</title>
     
     <!-- Предзагрузка фонов для мгновенного переключения -->
@@ -49,11 +51,12 @@
             padding: 30px;
         }
 
-        /* Автоматическая адаптация под горизонтальные экраны телефонов (маленькая высота) */
+        /* Более сильное уменьшение только для горизонтальных экранов телефонов */
         @media (max-height: 500px) {
             #game-container {
-                height: 100vh;
-                transform: scale(0.82);
+                height: 120vh;
+                width: 120vw;
+                transform: scale(0.72);
                 transform-origin: center center;
             }
         }
@@ -510,7 +513,11 @@
         }
 
         window.addEventListener('resize', checkOrientation);
-        window.addEventListener('DOMContentLoaded', checkOrientation);
+        window.addEventListener('DOMContentLoaded', () => {
+            checkOrientation();
+            // Автоматическая прокрутка страницы вверх для скрытия панели браузера на телефонах
+            window.scrollTo(0, 1);
+        });
 
         let currentStage = 1;
         const container = document.getElementById('game-container');
