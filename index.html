@@ -199,7 +199,7 @@
                 line-height: 1.2 !important;
             }
 
-            /* Осциллограф для телефонов (растягиваем canvas на всю ширину) */
+            /* Осциллограф для телефонов */
             .oscilloscope-panel {
                 padding: 10px 12px !important;
                 width: 92vw !important;
@@ -646,7 +646,9 @@
                 <li><strong>Калибровка связи:</strong> Формирует понимание принципов обработки сигналов, фильтрации и передачи данных в реальном времени.</li>
                 <li><strong>Запуск силового щита:</strong> Развивает скорость реакции и быстрое принятие решений в критических ситуациях.</li>
             </ul>
-            <a href="https://nvhol.github.io/Pro-BGUT/testdrive.html" class="btn" style="width: 100%; margin-top: 15px;">ПЕРЕЙТИ НА ШАГ 3</a>
+            <!-- Подсказка-инструкция для поворота телефона перед Шагом 3 -->
+            <p style="color: #00ffcc; font-size: 0.85rem; margin-top: 10px; margin-bottom: 4px; text-align: center;">📱 Поверните телефон вертикально для комфортного просмотра Шага 3</p>
+            <a href="https://nvhol.github.io/Pro-BGUT/testdrive.html" class="btn" style="width: 100%; margin-top: 6px;">ПЕРЕЙТИ НА ШАГ 3</a>
         </div>
 
         <!-- Диалоговое окно сюжета -->
@@ -915,7 +917,6 @@
         const ctx = canvas.getContext('2d');
 
         function initOscillator() {
-            // Динамически подстраиваем размер внутренних пикселей холста под ширину экрана на телефоне
             if (window.innerWidth < 900 && window.innerHeight < 500) {
                 canvas.width = canvas.parentElement.clientWidth;
                 canvas.height = 70;
