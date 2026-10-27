@@ -124,13 +124,17 @@
             transform: translateY(-2px);
         }
 
-        /* Адаптация только для телефонов в горизонтальном режиме: компактный фон без сильного растяжения и уменьшенный шрифт */
+        /* Адаптация ТОЛЬКО для телефонов в горизонтальном режиме: включаем прокрутку и компактный шрифт */
         @media (max-height: 500px) {
             body {
-                overflow: hidden; /* Без прокрутки для телефона тоже */
+                overflow-y: auto;
+                overflow-x: hidden;
+                height: auto;
+                min-height: 100vh;
             }
             #game-container {
                 height: 100vh;
+                min-height: 600px;
                 padding: 15px;
             }
             .dialogue-box {
