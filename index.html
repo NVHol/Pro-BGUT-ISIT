@@ -49,6 +49,35 @@
             padding: 30px;
         }
 
+        /* Предупреждение о портретной ориентации на мобильных */
+        #orientation-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(5, 11, 20, 0.95);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .rotate-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: rotatePhone 2s infinite ease-in-out;
+        }
+
+        @keyframes rotatePhone {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+            100% { transform: rotate(0deg); }
+        }
+
         .dialogue-box {
             background: rgba(5, 11, 20, 0.85);
             border: 2px solid #00e5ff;
@@ -351,6 +380,13 @@
 </head>
 <body>
 
+    <!-- Экран предупреждения о повороте телефона -->
+    <div id="orientation-warning">
+        <div class="rotate-icon">📱🔄</div>
+        <h2 style="color: #00e5ff; margin-bottom: 10px;">Пожалуйста, поверните устройство</h2>
+        <p style="color: #b2ebf2; font-size: 1rem; max-width: 400px;">Для прохождения квеста и комфортной игры расположите экран телефона горизонтально.</p>
+    </div>
+
     <div id="game-container" style="background-image: url('fon1.jpg');">
         
         <div id="error-overlay">
@@ -411,7 +447,7 @@
             <button class="btn" style="width: 100%; margin-top: 20px;" onclick="checkOscillator()">СИНХРОНИЗИРОВАТЬ</button>
         </div>
 
-        <!-- Мини-игра 3: Кликер-зарядка щита -->
+        <!-- Мини-игра 3: Кликер-зарядка щита (6 сгустков за 14 секунд) -->
         <div id="clicker-minigame" class="clicker-panel">
             <h3>ЗАРЯДКА СИЛОВОГО ЩИТА</h3>
             <div id="clicker-intro">
@@ -451,6 +487,20 @@
     </div>
 
     <script>
+        // Проверка ориентации экрана для мобильных устройств
+        function checkOrientation() {
+            const warning = document.getElementById('orientation-warning');
+            // Если устройство мобильное/узкое и высота больше ширины (портретный режим)
+            if (window.innerWidth < 900 && window.innerHeight > window.innerWidth) {
+                warning.style.display = 'flex';
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('DOMContentLoaded', checkOrientation);
+
         let currentStage = 1;
         const container = document.getElementById('game-container');
         const dialogueText = document.getElementById('dialogue-text');
@@ -835,6 +885,7 @@
 
         window.onload = () => {
             updateStage();
+            checkOrientation();
         };
     </script>
 </body>
