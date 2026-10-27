@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro-БГУТ: Студент на час — Нексус-9</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: #050b14;
+            color: #e0f7fc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 30px;
+        }
+
+        .dialogue-box {
+            background: rgba(5, 11, 20, 0.85);
+            border: 2px solid #00e5ff;
+            border-radius: 12px;
+            padding: 25px 35px;
+            max-width: 900px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+            position: relative;
+            z-index: 10;
+            backdrop-filter: blur(5px);
+            cursor: pointer;
+        }
+
+        .dialogue-text {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #b2ebf2;
+            min-height: 80px;
+            text-align: justify;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00838f, #00acc1);
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 172, 193, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #00acc1, #26c6da);
+            box-shadow: 0 0 15px rgba(38, 198, 218, 0.8);
+            transform: translateY(-2px);
+        }
+
+        /* Экран ошибки */
+        #error-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 23, 68, 0.25);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            pointer-events: none;
+            animation: pulseError 0.5s infinite alternate;
+        }
+
+        @keyframes pulseError {
+            from { background: rgba(255, 23, 68, 0.1); }
+            to { background: rgba(255, 23, 68, 0.4); }
+        }
+
+        .error-icon {
+            font-size: 10rem;
+            color: #ff1744;
+            filter: drop-shadow(0 0 30px #ff1744);
+        }
+
+        /* Мини-игра 1: Кодовая панель */
+        .minigame-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 25, 41, 0.95);
+            border: 2px solid #00bcd4;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 0 40px rgba(0, 188, 212, 0.4);
+            z-index: 50;
+            display: none;
+            text-align: center;
+        }
+
+        .code-display {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .code-slot {
+            width: 50px;
+            height: 60px;
+            background: #0288d1;
+            border: 2px solid #b2ebf2;
+            border-radius: 8px;
+            font-size: 2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 70px);
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .key-btn {
+            background: #102027;
+            border: 1px solid #00bcd4;
+            color: #00bcd4;
+            font-size: 1.5rem;
+            font-weight: bold;
+            height: 50px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .key-btn:hover {
+            background: #00bcd4;
+            color: #050b14;
+        }
+
+        .keypad-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-clear { background: #d32f2f; color: #fff; }
+        .btn-submit { background: #388e3c; color: #fff; }
+
+        .clues-hint {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #80deea;
+            background: rgba(0, 188, 212, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: left;
+        }
+
+        /* Мини-игра 2: Осциллограф */
+        .oscilloscope-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 25, 41, 0.95);
+            border: 2px solid #00e5ff;
+            border-radius: 16px;
+            padding: 25px;
+            width: 550px;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 0 40px rgba(0, 229, 255, 0.4);
+        }
+
+        .sliders-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .slider-group label {
+            font-size: 0.9rem;
+            color: #80deea;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-group input {
+            width: 100%;
+            accent-color: #00e5ff;
+            cursor: pointer;
+        }
+
+        /* Мини-игра 3: Кликер-зарядка щита (комфортный темп) */
+        .clicker-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 25, 41, 0.95);
+            border: 2px solid #00e5ff;
+            border-radius: 16px;
+            padding: 25px;
+            width: 540px;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 0 40px rgba(0, 229, 255, 0.5);
+            text-align: center;
+        }
+
+        .battery-container {
+            width: 100%;
+            height: 22px;
+            background: #102027;
+            border: 2px solid #00e5ff;
+            border-radius: 11px;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
+        }
+
+        .battery-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00838f, #00ffcc);
+            box-shadow: 0 0 10px #00ffcc;
+            transition: width 0.2s ease;
+        }
+
+        .energy-orb {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #00ffcc, #00838f);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 20px #00ffcc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            animation: pulseOrb 0.8s infinite alternate;
+        }
+
+        @keyframes pulseOrb {
+            from { transform: scale(1); box-shadow: 0 0 10px #00ffcc; }
+            to { transform: scale(1.15); box-shadow: 0 0 25px #00ffcc; }
+        }
+
+        /* Финальный экран */
+        .victory-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(5, 11, 20, 0.96);
+            border: 2px solid #00e5ff;
+            border-radius: 16px;
+            padding: 30px;
+            width: 750px;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 50;
+            display: none;
+            box-shadow: 0 0 50px rgba(0, 229, 255, 0.5);
+        }
+
+        .competence-list {
+            list-style: none;
+            margin: 15px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .competence-list li {
+            background: rgba(0, 188, 212, 0.1);
+            border-left: 4px solid #00e5ff;
+            padding: 12px 15px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .competence-list li strong {
+            color: #00e5ff;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container" style="background-image: url('fon1.jpg');">
+        
+        <div id="error-overlay">
+            <div class="error-icon">⚠️</div>
+        </div>
+
+        <!-- Мини-игра 1: Кодовая панель -->
+        <div id="code-minigame" class="minigame-container">
+            <h3>ВВЕДИТЕ КОД ДОСТУПА ШЛЮЗА</h3>
+            <p style="font-size: 0.85rem; color: #80deea; margin-bottom: 15px;">Расшифруйте подсказки на терминале</p>
+            <div class="code-display">
+                <div class="code-slot" id="slot-0"></div>
+                <div class="code-slot" id="slot-1"></div>
+                <div class="code-slot" id="slot-2"></div>
+            </div>
+            <div class="keypad">
+                <button class="key-btn" onclick="pressKey(1)">1</button>
+                <button class="key-btn" onclick="pressKey(2)">2</button>
+                <button class="key-btn" onclick="pressKey(3)">3</button>
+                <button class="key-btn" onclick="pressKey(4)">4</button>
+                <button class="key-btn" onclick="pressKey(5)">5</button>
+                <button class="key-btn" onclick="pressKey(6)">6</button>
+                <button class="key-btn" onclick="pressKey(7)">7</button>
+                <button class="key-btn" onclick="pressKey(8)">8</button>
+                <button class="key-btn" onclick="pressKey(9)">9</button>
+                <button class="key-btn" onclick="pressKey(0)">0</button>
+            </div>
+            <div class="keypad-actions">
+                <button class="action-btn btn-clear" onclick="clearCode()">Сброс</button>
+                <button class="action-btn btn-submit" onclick="submitCode()">ВВОД</button>
+            </div>
+            <div class="clues-hint">
+                📌 Подсказки системы:<br>
+                • 683: две цифры верные, но не на своих местах<br>
+                • 124: одна цифра верная, но не на своем месте<br>
+                • 936: две цифры верные, но не на своих местах<br>
+                • 248: в коде не используются
+            </div>
+        </div>
+
+        <!-- Мини-игра 2: Осциллограф -->
+        <div id="oscilloscope-minigame" class="oscilloscope-panel">
+            <h3>КАЛИБРОВКА СВЯЗИ С РОВЕРОМ</h3>
+            <p style="font-size: 0.9rem; color: #80deea; margin: 10px 0;">Настройте параметры частоты и фазы сигнала для синхронизации волн.</p>
+            <div style="background: #000; height: 120px; border-radius: 8px; border: 1px solid #00e5ff; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+                <canvas id="oscCanvas" width="500" height="110"></canvas>
+            </div>
+            <div class="sliders-container">
+                <div class="slider-group">
+                    <label>Частота сигнала: <span id="freq-val">20</span>%</label>
+                    <input type="range" id="sliderFreq" min="0" max="100" value="20" oninput="updateOscillator()">
+                </div>
+                <div class="slider-group">
+                    <label>Сдвиг фазы: <span id="phase-val">10</span>%</label>
+                    <input type="range" id="sliderPhase" min="0" max="100" value="10" oninput="updateOscillator()">
+                </div>
+            </div>
+            <button class="btn" style="width: 100%; margin-top: 20px;" onclick="checkOscillator()">СИНХРОНИЗИРОВАТЬ</button>
+        </div>
+
+        <!-- Мини-игра 3: Кликер-зарядка щита (6 сгустков за 14 секунд) -->
+        <div id="clicker-minigame" class="clicker-panel">
+            <h3>ЗАРЯДКА СИЛОВОГО ЩИТА</h3>
+            <div id="clicker-intro">
+                <p style="font-size: 0.95rem; color: #b2ebf2; margin: 15px 0; line-height: 1.5;">
+                    Энергия поступает нестабильно! Успейте поймать сгустки энергии (⚡), кликая по ним мышкой, чтобы полностью зарядить батарею щита.
+                </p>
+                <button class="btn" style="width: 100%; margin-top: 5px;" onclick="startActualGame()">НАЧАТЬ ЗАРЯДКУ</button>
+            </div>
+            <div id="clicker-gameplay" style="display: none;">
+                <p style="font-size: 0.85rem; color: #ff1744; margin-bottom: 5px;">Осталось времени: <span id="clicker-timer">14</span> сек</p>
+                <div class="battery-container">
+                    <div class="battery-fill" id="battery-fill"></div>
+                </div>
+                <div id="orb-field" style="width: 100%; height: 210px; position: relative; border: 1px dashed rgba(0,229,255,0.4); border-radius: 8px; background: rgba(0,0,0,0.3); margin-top: 5px;"></div>
+            </div>
+        </div>
+
+        <!-- Финальный экран победы -->
+        <div id="victory-panel" class="victory-panel">
+            <h2 style="color: #00e5ff; margin-bottom: 10px;">МИССИЯ УСПЕШНО ЗАВЕРШЕНА!</h2>
+            <p style="margin-bottom: 15px; color: #b2ebf2;">Вы блестяще справились с кризисной ситуацией на станции «Нексус-9» и проявили качества настоящего IT-инженера будущего!</p>
+            <h3 style="color: #80deea; font-size: 1.1rem; margin-bottom: 8px;">Чему научило каждое задание квеста (специальность «Информационные системы и технологии»):</h3>
+            <ul class="competence-list">
+                <li><strong>Разблокировка шлюза:</strong> Развивает логическое мышление, навыки дебаггинга (отладки) и анализа систем управления.</li>
+                <li><strong>Калибровка связи:</strong> Формирует понимание принципов обработки сигналов, фильтрации и передачи данных в реальном времени.</li>
+                <li><strong>Запуск силового щита:</strong> Развивает скорость реакции и быстрое принятие решений в критических ситуациях.</li>
+            </ul>
+            <button class="btn" style="width: 100%; margin-top: 15px;" onclick="location.reload()">ПРОЙТИ КВЕСТ ЗАНОВО</button>
+        </div>
+
+        <!-- Диалоговое окно сюжета -->
+        <div class="dialogue-box" id="dialogue-box" onclick="handleDialogueClick()" style="display: none;">
+            <div class="dialogue-text" id="dialogue-text"></div>
+            <button class="btn" id="next-btn" onclick="event.stopPropagation(); nextStage();" style="display: none;">ПРОДОЛЖИТЬ</button>
+        </div>
+
+    </div>
+
+    <script>
+        let currentStage = 1;
+        const container = document.getElementById('game-container');
+        const dialogueText = document.getElementById('dialogue-text');
+        const dialogueBox = document.getElementById('dialogue-box');
+        const nextBtn = document.getElementById('next-btn');
+        const errorOverlay = document.getElementById('error-overlay');
+
+        let typingInterval = null;
+        let isTyping = false;
+        let fullCurrentText = '';
+
+        const stages = {
+            1: {
+                bg: 'fon1.jpg',
+                text: '2154 год. Орбитальная научно-исследовательская станция «Нексус-9» на орбите Марса. Вы — юный инженер, проходящий практику по специальности «Информационные системы и технологии». Несколько минут назад в исследовательский модуль станции попал микрометеорит! Автоматические системы жизнеобеспечения перешли в защитный режим и заблокировали отсек с куполом биосферы. До подхода марсианской бури остаётся совсем немного времени. Ваша задача — последовательно восстановить работу центрального терминала, настроить связь и запустить силовой щит станции!',
+                action: () => {
+                    dialogueBox.style.display = 'none';
+                    setTimeout(() => {
+                        dialogueBox.style.display = 'block';
+                        typeWriter(stages[1].text);
+                    }, 1000);
+                }
+            },
+            2: {
+                bg: 'fon2.jpg',
+                text: '',
+                action: () => {
+                    dialogueBox.style.display = 'none';
+                    setTimeout(() => {
+                        currentStage = 3;
+                        updateStage();
+                    }, 1000);
+                }
+            },
+            3: {
+                bg: 'fon3.jpg',
+                text: 'Шлюзовой отсек заблокирован! Чтобы перейти на ручное управление нужно ввести код доступа.',
+                action: () => {
+                    dialogueBox.style.display = 'block';
+                    typeWriter(stages[3].text);
+                }
+            },
+            4: {
+                bg: 'fon3.jpg',
+                text: '',
+                action: () => {
+                    dialogueBox.style.display = 'none';
+                    document.getElementById('code-minigame').style.display = 'block';
+                }
+            },
+            5: {
+                bg: 'fon4.jpg',
+                text: 'Шлюзовой отсек успешно разблокирован! Путь свободен, переходим в отсек связи.',
+                action: () => {
+                    dialogueBox.style.display = 'block';
+                    typeWriter(stages[5].text);
+                }
+            },
+            6: {
+                bg: 'fon5.jpg',
+                text: 'Потеряна связь с исследовательским ровером на поверхности Марса. Сигнал рассинхронизирован. Требуется калибровка параметров на осциллографе.',
+                action: () => {
+                    dialogueBox.style.display = 'block';
+                    typeWriter(stages[6].text);
+                }
+            },
+            7: {
+                bg: 'fon5.jpg',
+                text: '',
+                action: () => {
+                    dialogueBox.style.display = 'none';
+                    document.getElementById('oscilloscope-minigame').style.display = 'block';
+                    initOscillator();
+                }
+            },
+            8: {
+                bg: 'fon6.jpg',
+                text: 'Связь восстановлена! Ровер передает виртуальный чип доступа. Переходим к защитному куполу.',
+                action: () => {
+                    dialogueBox.style.display = 'block';
+                    typeWriter(stages[8].text);
+                }
+            },
+            9: {
+                bg: 'fon7.jpg',
+                text: 'Главный реактор работает, но энергия не доходит до биосферы – запускаем генератор силового поля.',
+                action: () => {
+                    dialogueBox.style.display = 'block';
+                    typeWriter(stages[9].text);
+                }
+            },
+            10: {
+                bg: 'fon7.jpg',
+                text: '',
+                action: () => {
+                    dialogueBox.style.display = 'none';
+                    document.getElementById('clicker-intro').style.display = 'block';
+                    document.getElementById('clicker-gameplay').style.display = 'none';
+                    document.getElementById('clicker-minigame').style.display = 'block';
+                }
+            },
+            11: {
+                bg: 'fon8.jpg',
+                text: 'Батарея щита заряжена на 100%! Защитный купол биосферы успешно активирован.',
+                action: () => {
+                    dialogueBox.style.display = 'block';
+                    typeWriter(stages[11].text);
+                }
+            },
+            12: {
+                bg: 'fon9.jpg',
+                text: '',
+                action: () => {
+                    dialogueBox.style.display = 'none';
+                    setTimeout(() => {
+                        document.getElementById('victory-panel').style.display = 'block';
+                    }, 1000);
+                }
+            }
+        };
+
+        function typeWriter(text) {
+            fullCurrentText = text;
+            dialogueText.innerHTML = '';
+            nextBtn.style.display = 'none';
+            isTyping = true;
+            let i = 0;
+            if (typingInterval) clearInterval(typingInterval);
+
+            typingInterval = setInterval(() => {
+                if (i < text.length) {
+                    dialogueText.innerHTML += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(typingInterval);
+                    isTyping = false;
+                    nextBtn.style.display = 'inline-block';
+                }
+            }, 25);
+        }
+
+        function handleDialogueClick() {
+            if (isTyping) {
+                if (typingInterval) clearInterval(typingInterval);
+                dialogueText.innerHTML = fullCurrentText;
+                isTyping = false;
+                nextBtn.style.display = 'inline-block';
+            }
+        }
+
+        function updateStage() {
+            const stage = stages[currentStage];
+            container.style.backgroundImage = `url('${stage.bg}')`;
+            stage.action();
+        }
+
+        function nextStage() {
+            if (currentStage === 3) {
+                currentStage = 4;
+                updateStage();
+                return;
+            }
+            if (currentStage === 5) {
+                currentStage = 6;
+                updateStage();
+                return;
+            }
+            if (currentStage === 6) {
+                currentStage = 7;
+                updateStage();
+                return;
+            }
+            if (currentStage === 8) {
+                currentStage = 9;
+                updateStage();
+                return;
+            }
+            if (currentStage === 9) {
+                currentStage = 10;
+                updateStage();
+                return;
+            }
+            if (currentStage === 11) {
+                currentStage = 12;
+                updateStage();
+                return;
+            }
+            currentStage++;
+            if (stages[currentStage]) {
+                updateStage();
+            }
+        }
+
+        // --- МИНИ-ИГРА 1: КОД ---
+        let enteredCode = [];
+        const correctCode = [3, 6, 1];
+
+        function pressKey(num) {
+            if (enteredCode.length < 3) {
+                enteredCode.push(num);
+                updateCodeDisplay();
+            }
+        }
+
+        function clearCode() {
+            enteredCode = [];
+            updateCodeDisplay();
+        }
+
+        function updateCodeDisplay() {
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`slot-${i}`).innerText = enteredCode[i] !== undefined ? enteredCode[i] : '';
+            }
+        }
+
+        function submitCode() {
+            if (enteredCode.length !== 3) return;
+            const isCorrect = enteredCode.every((val, index) => val === correctCode[index]);
+            
+            if (isCorrect) {
+                document.getElementById('code-minigame').style.display = 'none';
+                currentStage = 5;
+                updateStage();
+            } else {
+                triggerErrorAnimation();
+                clearCode();
+            }
+        }
+
+        function triggerErrorAnimation() {
+            const errorOverlay = document.getElementById('error-overlay');
+            errorOverlay.style.display = 'flex';
+            setTimeout(() => {
+                errorOverlay.style.display = 'none';
+            }, 1200);
+        }
+
+        // --- МИНИ-ИГРА 2: ОСЦИЛЛОГРАФ ---
+        const canvas = document.getElementById('oscCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function initOscillator() {
+            updateOscillator();
+        }
+
+        function updateOscillator() {
+            const freq = document.getElementById('sliderFreq').value;
+            const phase = document.getElementById('sliderPhase').value;
+            
+            document.getElementById('freq-val').innerText = freq;
+            document.getElementById('phase-val').innerText = phase;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.15)';
+            ctx.lineWidth = 1;
+            for(let x=0; x<canvas.width; x+=30) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+            }
+            for(let y=0; y<canvas.height; y+=20) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+            }
+
+            // Красный эталонный сигнал
+            ctx.strokeStyle = '#ff1744';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let x = 0; x < canvas.width; x++) {
+                let y = canvas.height / 2 + Math.sin(x * 0.035) * 35;
+                if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Зеленый настраиваемый сигнал
+            const fVal = 0.02 + (freq / 100) * 0.03;
+            const pVal = (phase / 100) * Math.PI * 2;
+            ctx.strokeStyle = '#00e676';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let x = 0; x < canvas.width; x++) {
+                let y = canvas.height / 2 + Math.sin(x * fVal + pVal) * 35;
+                if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        function checkOscillator() {
+            const freq = parseInt(document.getElementById('sliderFreq').value);
+            const phase = parseInt(document.getElementById('sliderPhase').value);
+
+            if (Math.abs(freq - 47) <= 5 && Math.abs(phase - 3) <= 5) {
+                document.getElementById('oscilloscope-minigame').style.display = 'none';
+                currentStage = 8;
+                updateStage();
+            } else {
+                triggerErrorAnimation();
+            }
+        }
+
+        // --- МИНИ-ИГРА 3: КЛИКЕР-ЗАРЯДКА ЩИТА (6 сгустков за 14 секунд) ---
+        let clickerScore = 0;
+        let clickerTimer = 14;
+        let clickerInterval = null;
+        let orbSpawnInterval = null;
+        const targetScore = 6;
+
+        function startActualGame() {
+            document.getElementById('clicker-intro').style.display = 'none';
+            document.getElementById('clicker-gameplay').style.display = 'block';
+
+            clickerScore = 0;
+            clickerTimer = 14;
+            document.getElementById('clicker-timer').innerText = clickerTimer;
+            document.getElementById('battery-fill').style.width = '0%';
+            
+            const field = document.getElementById('orb-field');
+            field.innerHTML = '';
+
+            if (clickerInterval) clearInterval(clickerInterval);
+            if (orbSpawnInterval) clearInterval(orbSpawnInterval);
+
+            // Таймер обратного отсчета (14 секунд)
+            clickerInterval = setInterval(() => {
+                clickerTimer--;
+                document.getElementById('clicker-timer').innerText = clickerTimer;
+                if (clickerTimer <= 0) {
+                    clearInterval(clickerInterval);
+                    clearInterval(orbSpawnInterval);
+                    if (clickerScore < targetScore) {
+                        triggerErrorAnimation();
+                        document.getElementById('clicker-gameplay').style.display = 'none';
+                        document.getElementById('clicker-intro').style.display = 'block';
+                    }
+                }
+            }, 1000);
+
+            // Спавн сгустков энергии (каждые 950 мс для комфортного темпа)
+            spawnOrb();
+            orbSpawnInterval = setInterval(spawnOrb, 950);
+        }
+
+        function spawnOrb() {
+            const field = document.getElementById('orb-field');
+            const oldOrb = document.getElementById('current-orb');
+            if (oldOrb) oldOrb.remove();
+
+            if (clickerScore >= targetScore) return;
+
+            const orb = document.createElement('div');
+            orb.id = 'current-orb';
+            orb.className = 'energy-orb';
+            orb.innerHTML = '⚡';
+
+            const maxX = field.clientWidth - 70;
+            const maxY = field.clientHeight - 70;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+
+            orb.style.left = randomX + 'px';
+            orb.style.top = randomY + 'px';
+
+            orb.onclick = () => {
+                clickerScore++;
+                const percentage = (clickerScore / targetScore) * 100;
+                document.getElementById('battery-fill').style.width = percentage + '%';
+                
+                orb.remove();
+
+                if (clickerScore >= targetScore) {
+                    clearInterval(clickerInterval);
+                    clearInterval(orbSpawnInterval);
+                    setTimeout(() => {
+                        document.getElementById('clicker-minigame').style.display = 'none';
+                        currentStage = 11;
+                        updateStage();
+                    }, 500);
+                }
+            };
+
+            field.appendChild(orb);
+        }
+
+        window.onload = () => {
+            updateStage();
+        };
+    </script>
+</body>
+</html>
